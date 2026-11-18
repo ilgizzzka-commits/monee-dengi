@@ -10,7 +10,7 @@
    он не сохраняет никогда. Последние посчитанные цифры хранит само
    приложение (app.js, localStorage), «Выйти» их стирает. */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const CACHE = 'monee-dengi-' + VERSION;
 const FONTS = 'monee-dengi-fonts';
 const DATA = 'monee-dengi-data';

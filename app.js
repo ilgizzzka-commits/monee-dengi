@@ -731,7 +731,7 @@ function viewLogin() {
       <rect x="0" y="6" width="58" height="20" rx="4" class="seg-money"/><rect x="61" y="6" width="22" height="20" rx="4" class="seg-cab"/><rect x="86" y="6" width="34" height="20" rx="4" class="seg-goods"/>
       <rect x="0" y="34" width="40" height="20" rx="4" class="seg-debt"/><rect x="43" y="34" width="77" height="20" rx="4" class="seg-equity"/>
     </svg>
-    <h1>Деньги Monee</h1>
+    <h1>Деньги Monee · пульт</h1>
     <p class="lead">Сколько денег на счетах, во что они вложены, сколько бизнес должен и сколько заработал. Цифры берутся из таблицы «Баланс ДДС».</p>
     ${state.error ? `<div class="alert" role="alert">${esc(state.error)}</div>` : ''}
     <div class="login-actions">
@@ -831,7 +831,7 @@ function viewNow(m) {
   <div class="wrap page">
     <header class="top">
       <div class="top-main">
-        <p class="brand">Деньги Monee</p>
+        <p class="brand">Деньги Monee · пульт</p>
         <h1>На конец ${esc(mGen(m.month))}</h1>
         <p class="sub">${sourceLine(m)}</p>
       </div>
@@ -909,7 +909,7 @@ function viewMonths(m) {
   <div class="wrap wrap-wide page">
     <header class="top">
       <div class="top-main">
-        <p class="brand">Деньги Monee</p>
+        <p class="brand">Деньги Monee · пульт</p>
         <h1>Месяцы</h1>
         <p class="sub">${esc(range)}</p>
       </div>
