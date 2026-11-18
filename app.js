@@ -1,8 +1,9 @@
 'use strict';
 
 /* Деньги Monee — картина денег бизнеса из таблицы «Баланс ДДС».
-   Только чтение. Цифры живут в открытой вкладке (sessionStorage) и стираются
-   при её закрытии. В localStorage — только какой файл открывать. */
+   Только чтение. Последние посчитанные цифры (не сам файл) хранятся на этом
+   устройстве (localStorage), чтобы приложение открывалось без входа и без
+   интернета. Кнопка «Выйти» стирает их. */
 
 const CONFIG = {
   // «Номер приложения» для входа через Google (OAuth Client ID). Не секрет.
@@ -13,7 +14,8 @@ const CONFIG = {
 };
 
 const LS_KEY = 'monee-dengi:settings';
-const SS_KEY = 'monee-dengi:session';
+const SS_KEY = 'monee-dengi:session'; // старое место (до 18.11.2026), только стираем
+const LAST_KEY = 'monee-dengi:last';
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const GSHEET_MIME = 'application/vnd.google-apps.spreadsheet';
 
@@ -581,8 +583,7 @@ const fileInput = document.getElementById('file-input');
 const state = { screen: 'login', model: null, error: null, selected: null, loadingText: '' };
 
 function persist() {
-  if (state.model) save('session', SS_KEY, { model: state.model, screen: state.screen, selected: state.selected });
-  else save('session', SS_KEY, null);
+  save('local', LAST_KEY, state.model ? { model: state.model, screen: state.screen, selected: state.selected } : null);
 }
 
 function go(screen) {
@@ -631,6 +632,95 @@ function render() {
   else app.innerHTML = viewLogin();
 }
 
+/* ---------- открытые данные: курсы ЦБ и производственный календарь ----------
+   Файл data.json сам обновляет задание GitHub Actions (fetch.py, .github/workflows/update.yml).
+   Там только общие открытые данные, ничего личного. */
+
+const market = { status: 'loading', data: null };
+const UFA_TZ = 'Asia/Yekaterinburg';
+const RATE = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const CUR_SIGN = { CNY: '¥', USD: '$', EUR: '€' };
+
+function ymd(iso) { const [y, m, d] = String(iso).slice(0, 10).split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); }
+function dayMonth(iso) { const d = ymd(iso); return `${d.getUTCDate()}${NBSP}${M_GEN[d.getUTCMonth()]}`; }
+function whenUfa(iso) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  const day = new Intl.DateTimeFormat('ru-RU', { timeZone: UFA_TZ, day: 'numeric', month: 'long' }).format(d);
+  const time = new Intl.DateTimeFormat('ru-RU', { timeZone: UFA_TZ, hour: '2-digit', minute: '2-digit' }).format(d);
+  return `${day} в ${time}`;
+}
+function plural(n, one, few, many) {
+  const a = Math.abs(n) % 100; const b = a % 10;
+  if (a > 10 && a < 20) return many;
+  if (b > 1 && b < 5) return few;
+  return b === 1 ? one : many;
+}
+
+async function loadMarket() {
+  market.status = 'loading'; paintMarket();
+  try {
+    const res = await fetch(`data.json?t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) throw new Error(String(res.status));
+    const d = await res.json();
+    if (!d || (!d.rates && !d.calendar)) throw new Error('пустой файл');
+    market.data = d; market.status = 'ok';
+  } catch {
+    market.status = 'error';
+  }
+  paintMarket();
+}
+
+function paintMarket() {
+  document.querySelectorAll('[data-market]').forEach((el) => { el.innerHTML = viewMarketBody(); });
+}
+
+function viewMarket(compact = false) {
+  return `<section class="block market${compact ? ' market-compact' : ''}" aria-label="Курсы ЦБ и календарь">
+    <h2><span class="key key-market"></span>Курсы ЦБ и календарь</h2>
+    <div data-market aria-live="polite">${viewMarketBody()}</div>
+  </section>`;
+}
+
+function viewMarketBody() {
+  if (market.status === 'loading') return '<p class="mk-note">Загружаю курсы и календарь…</p>';
+  if (market.status === 'error' || !market.data) {
+    return `<div class="mk-error" role="alert">Не получилось загрузить курсы и календарь. Проверь интернет и нажми «Повторить». Остальное приложение работает как обычно.
+      <button class="btn mk-retry" data-act="market-retry">Повторить</button></div>`;
+  }
+  const d = market.data;
+  const parts = [];
+  const r = d.rates;
+  if (r && r.items?.length) {
+    const rows = r.items.map((it) => {
+      const ch = Math.round(it.change * 100) / 100;
+      const dl = ch === 0 ? '<span class="dl">без изменений</span>'
+        : `<span class="dl">${ch > 0 ? '▲' : '▼'}${NBSP}${RATE.format(Math.abs(ch))}</span>`;
+      return `<li class="row"><span class="row-name"><b class="cur-sign">${esc(CUR_SIGN[it.code] || '')}</b> ${esc(it.name)}</span><span class="row-val">${RATE.format(it.value)}${NBSP}₽</span>${dl}</li>`;
+    }).join('');
+    parts.push(`<p class="mk-cap">Курс ЦБ на ${esc(dayMonth(r.date))}${r.ok === false ? ` <span class="mk-stale">(источник не ответил, данные от ${esc(whenUfa(r.fetched_at))})</span>` : ''}</p><ul class="ledger">${rows}</ul>`);
+  }
+  const c = d.calendar;
+  if (c && c.workdays_in_month != null) {
+    const mon = M_GEN[Number(c.month.slice(5, 7)) - 1];
+    const today = c.today_is_workday ? (c.today_is_short ? 'Сегодня сокращённый рабочий день' : 'Сегодня рабочий день') : 'Сегодня выходной';
+    const tomorrow = c.tomorrow_is_workday == null ? '' : (c.tomorrow_is_workday ? 'завтра рабочий' : 'завтра выходной');
+    const hol = (c.next_holidays || []).map((h) => {
+      const span = h.from === h.to ? dayMonth(h.from) : `${dayMonth(h.from)} — ${dayMonth(h.to)}`;
+      return `<li class="row"><span class="row-name">${esc(h.name)}</span><span class="row-val mk-dates">${esc(span)}</span><span class="dl">${h.days}${NBSP}${plural(h.days, 'день', 'дня', 'дней')} отдыха</span></li>`;
+    }).join('');
+    parts.push(`<p class="mk-cap">Производственный календарь${c.ok === false ? ` <span class="mk-stale">(источник не ответил, данные от ${esc(whenUfa(c.fetched_at))})</span>` : ''}</p>
+      <ul class="ledger">
+        <li class="row"><span class="row-name">Рабочих дней до конца ${esc(mon)}</span><span class="row-val">${c.workdays_left} из ${c.workdays_in_month}</span><span class="dl">${esc(today)}${tomorrow ? `, ${esc(tomorrow)}` : ''}</span></li>
+        ${hol}
+      </ul>`);
+  }
+  const age = (Date.now() - new Date(d.updated_at).getTime()) / 36e5;
+  const old = age > 48 ? ' <span class="mk-stale">— давно не обновлялось, проверь задание в GitHub Actions</span>' : '';
+  parts.push(`<p class="mk-upd">Обновлено ${esc(whenUfa(d.updated_at))} (время Уфы)${old}</p>`);
+  return parts.join('');
+}
+
 /* ---------- экран «Вход» ---------- */
 
 function viewLogin() {
@@ -650,7 +740,8 @@ function viewLogin() {
       <button class="btn" data-act="file">Открыть файл вручную</button>
       <button class="btn btn-quiet" data-act="demo">Посмотреть на выдуманных цифрах</button>
     </div>
-    <p class="fine">Файл читается только на этом устройстве. Цифры никуда не отправляются и стираются, когда закрываешь вкладку. Таблица не меняется.</p>
+    ${viewMarket(true)}
+    <p class="fine">Файл читается только на этом устройстве. Цифры никуда не отправляются; последние запоминаются на этом устройстве, кнопка «Выйти» их стирает. Таблица не меняется.</p>
   </main>`;
 }
 
@@ -688,8 +779,11 @@ function sverkaBadge(m) {
 function sourceLine(m) {
   const t = new Date(m.loadedAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
   if (m.source.type === 'demo') return 'Выдуманные цифры для примера';
-  if (m.source.type === 'google') return `Из Google Диска, загружено в ${t}`;
-  return `Из файла «${esc(m.source.name)}», загружено в ${t}`;
+  const d = new Date(m.loadedAt);
+  const today = new Date().toDateString() === d.toDateString();
+  const when = today ? `сегодня в ${t}` : `${d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })} в ${t}`;
+  if (m.source.type === 'google') return `Из Google Диска, загружено ${when}`;
+  return `Из файла «${esc(m.source.name)}», загружено ${when}`;
 }
 
 function nav(screen) {
@@ -788,6 +882,7 @@ function viewNow(m) {
         <h2><span class="key key-debt"></span>Долги <span class="h-sum">${rub(n.debt.v)}</span></h2>
         <ul class="ledger">${n.debt.parts.map((it) => ledgerRow(it, { goodUp: false })).join('')}</ul>
       </section>
+      ${viewMarket()}
     </div>
   </div>`;
 }
@@ -924,7 +1019,8 @@ app.addEventListener('click', (ev) => {
   const btn = ev.target.closest('[data-act]');
   if (!btn || btn.disabled) return;
   const act = btn.dataset.act;
-  if (act === 'google') startGoogle();
+  if (act === 'market-retry') loadMarket();
+  else if (act === 'google') startGoogle();
   else if (act === 'file') { fileInput.value = ''; fileInput.click(); }
   else if (act === 'demo') run(async () => demoModel());
   else if (act === 'months') go('months');
@@ -965,12 +1061,14 @@ window.addEventListener('resize', () => {
 /* ---------- старт ---------- */
 
 (function start() {
-  const saved = load('session', SS_KEY);
+  const saved = load('local', LAST_KEY) || load('session', SS_KEY);
+  save('session', SS_KEY, null);
   if (saved?.model?.v === 1) {
     state.model = saved.model;
     state.selected = saved.selected ?? saved.model.series.at(-1)?.key ?? null;
     state.screen = saved.screen === 'months' ? 'months' : 'now';
   }
   render();
+  loadMarket();
   if (CONFIG.googleClientId) gisReady().catch(() => {});
 }());

@@ -1,0 +1,49 @@
+# Обновление открытых данных (курсы ЦБ и производственный календарь) в data.json.
+#
+# Когда запускается (время Уфы = UTC + 5):
+#   - каждый день в 06:00 по Уфе (01:00 UTC) — новый день: календарь и курс на сегодня;
+#   - по будням в 15:00 по Уфе (10:00 UTC) — ЦБ уже выложил курс на завтра (около 13:30 по Уфе).
+#   GitHub может запускать с опозданием на 5–15 минут — это нормально.
+# Ручной запуск: вкладка Actions → «Обновить данные» → Run workflow.
+
+name: Обновить данные
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+    - cron: '0 10 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Собрать данные
+        run: python fetch.py
+
+      - name: Сохранить data.json в репозиторий (если изменился)
+        run: |
+          if git diff --quiet -- data.json; then
+            echo "Данные не изменились — сохранять нечего."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -m "Данные: курсы ЦБ и календарь ($(TZ=Asia/Yekaterinburg date '+%d.%m.%Y %H:%M') Уфа)"
+          git pull --rebase --autostash
+          git push

@@ -257,6 +257,20 @@ button { font: inherit; color: inherit; }
 .row-group { font-weight: 600; }
 .group > ul .row:last-child { border-bottom-color: var(--line); }
 
+/* ---------- курсы ЦБ и календарь (data.json) ---------- */
+.key-market { background: var(--cab); border-radius: 50%; }
+.market .ledger { margin-bottom: 6px; }
+.mk-cap { margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.mk-note, .mk-upd { margin-top: 10px; font-size: 13px; color: var(--muted); }
+.mk-stale { color: var(--bad); font-weight: 500; text-transform: none; letter-spacing: 0; }
+.mk-error { margin-top: 12px; padding: 14px 16px; border-radius: 10px; background: var(--bad-bg); color: var(--bad); font-weight: 500; display: grid; gap: 10px; justify-items: start; }
+.mk-retry { min-height: 40px; }
+.cur-sign { display: inline-block; min-width: 1.2em; color: var(--cab); font-weight: 700; }
+.mk-dates { font-weight: 500; }
+.market-compact { margin-top: 32px; }
+.market-compact h2 { font-size: 16px; border-bottom-width: 1px; }
+.market-compact .row { padding: 7px 0; font-size: 15px; }
+
 /* ---------- месяцы ---------- */
 .chart-block { margin-top: 22px; }
 .chart-legend { display: flex; gap: 18px; font-size: 13px; color: var(--ink-2); margin-bottom: 6px; }

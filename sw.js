@@ -5,13 +5,15 @@
    ВАЖНО: при КАЖДОЙ выкладке повышай VERSION (v1 → v2 → v3 …).
    Иначе телефон так и будет показывать старую версию из своего запаса.
 
-   Что сохраняется на телефоне: только «оболочка» приложения — страница,
-   оформление, код, иконки и шрифт. Цифры из таблицы и всё, что идёт
-   через Google (вход, Диск), НЕ сохраняются никогда. */
+   Что этот файл сохраняет на телефоне: только «оболочку» приложения —
+   страницу, оформление, код, иконки и шрифт. Ответы Google (вход, Диск)
+   он не сохраняет никогда. Последние посчитанные цифры хранит само
+   приложение (app.js, localStorage), «Выйти» их стирает. */
 
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'monee-dengi-' + VERSION;
 const FONTS = 'monee-dengi-fonts';
+const DATA = 'monee-dengi-data';
 
 const SHELL = [
   './',
@@ -36,7 +38,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys
-        .filter((k) => k.startsWith('monee-dengi-') && k !== CACHE && k !== FONTS)
+        .filter((k) => k.startsWith('monee-dengi-') && k !== CACHE && k !== FONTS && k !== DATA)
         .map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
@@ -46,6 +48,18 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
+
+  // data.json (курсы ЦБ и календарь, открытые данные): сначала из сети, чтобы были свежие;
+  // без интернета — последняя сохранённая копия.
+  if (url.origin === self.location.origin && url.pathname.endsWith('/data.json')) {
+    event.respondWith(
+      fetch(req).then((res) => {
+        if (res.ok) { const copy = res.clone(); caches.open(DATA).then((c) => c.put('data.json', copy)); }
+        return res;
+      }).catch(() => caches.open(DATA).then((c) => c.match('data.json')).then((hit) => hit || Response.error()))
+    );
+    return;
+  }
 
   // Своё: сначала из запаса (быстро и без сети), иначе из сети.
   if (url.origin === self.location.origin) {

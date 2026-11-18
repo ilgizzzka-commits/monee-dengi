@@ -1,0 +1,67 @@
+{
+  "app": "Деньги Monee",
+  "timezone": "Уфа (UTC+5)",
+  "rates": {
+    "ok": true,
+    "source": "ЦБ РФ (cbr-xml-daily.ru)",
+    "date": "2026-11-18",
+    "prev_date": "2026-11-17",
+    "items": [
+      {
+        "code": "CNY",
+        "name": "Юань",
+        "value": 12.3419,
+        "prev": 12.3472,
+        "change": -0.0053
+      },
+      {
+        "code": "USD",
+        "name": "Доллар",
+        "value": 82.4529,
+        "prev": 82.5143,
+        "change": -0.0614
+      },
+      {
+        "code": "EUR",
+        "name": "Евро",
+        "value": 90.8136,
+        "prev": 91.1948,
+        "change": -0.3812
+      }
+    ],
+    "fetched_at": "2026-11-18T14:29:34+05:00"
+  },
+  "calendar": {
+    "ok": true,
+    "source": "Производственный календарь РФ (isdayoff.ru)",
+    "today": "2026-11-18",
+    "today_is_workday": true,
+    "today_is_short": false,
+    "tomorrow_is_workday": true,
+    "month": "2026-11",
+    "workdays_in_month": 20,
+    "workdays_left": 9,
+    "next_holidays": [
+      {
+        "from": "2026-12-31",
+        "to": "2027-01-10",
+        "days": 11,
+        "name": "Новогодние каникулы"
+      },
+      {
+        "from": "2027-02-21",
+        "to": "2027-02-23",
+        "days": 3,
+        "name": "День защитника Отечества"
+      },
+      {
+        "from": "2027-03-06",
+        "to": "2027-03-08",
+        "days": 3,
+        "name": "Международный женский день"
+      }
+    ],
+    "fetched_at": "2026-11-18T14:29:36+05:00"
+  },
+  "updated_at": "2026-11-18T14:29:36+05:00"
+}
