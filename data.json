@@ -29,18 +29,18 @@
         "change": -0.4531
       }
     ],
-    "fetched_at": "2026-11-18T23:31:15+05:00"
+    "fetched_at": "2026-11-19T13:18:49+05:00"
   },
   "calendar": {
     "ok": true,
     "source": "Производственный календарь РФ (isdayoff.ru)",
-    "today": "2026-11-18",
+    "today": "2026-11-19",
     "today_is_workday": true,
     "today_is_short": false,
     "tomorrow_is_workday": true,
     "month": "2026-11",
     "workdays_in_month": 20,
-    "workdays_left": 9,
+    "workdays_left": 8,
     "next_holidays": [
       {
         "from": "2026-12-31",
@@ -61,7 +61,7 @@
         "name": "Международный женский день"
       }
     ],
-    "fetched_at": "2026-11-18T23:31:16+05:00"
+    "fetched_at": "2026-11-19T13:18:50+05:00"
   },
-  "updated_at": "2026-11-18T23:31:16+05:00"
+  "updated_at": "2026-11-19T13:18:50+05:00"
 }
