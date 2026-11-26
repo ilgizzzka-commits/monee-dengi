@@ -4,43 +4,43 @@
   "rates": {
     "ok": true,
     "source": "ЦБ РФ (cbr-xml-daily.ru)",
-    "date": "2026-11-26",
-    "prev_date": "2026-11-25",
+    "date": "2026-11-27",
+    "prev_date": "2026-11-26",
     "items": [
       {
         "code": "CNY",
         "name": "Юань",
-        "value": 12.3154,
-        "prev": 12.2767,
-        "change": 0.0387
+        "value": 12.3184,
+        "prev": 12.3154,
+        "change": 0.003
       },
       {
         "code": "USD",
         "name": "Доллар",
-        "value": 82.313,
-        "prev": 82.1664,
-        "change": 0.1466
+        "value": 82.1265,
+        "prev": 82.313,
+        "change": -0.1865
       },
       {
         "code": "EUR",
         "name": "Евро",
-        "value": 90.2397,
-        "prev": 89.8818,
-        "change": 0.3579
+        "value": 89.8053,
+        "prev": 90.2397,
+        "change": -0.4344
       }
     ],
-    "fetched_at": "2026-11-26T14:06:07+05:00"
+    "fetched_at": "2026-11-27T00:22:12+05:00"
   },
   "calendar": {
     "ok": true,
     "source": "Производственный календарь РФ (isdayoff.ru)",
-    "today": "2026-11-26",
+    "today": "2026-11-27",
     "today_is_workday": true,
     "today_is_short": false,
-    "tomorrow_is_workday": true,
+    "tomorrow_is_workday": false,
     "month": "2026-11",
     "workdays_in_month": 20,
-    "workdays_left": 3,
+    "workdays_left": 2,
     "next_holidays": [
       {
         "from": "2026-12-31",
@@ -61,7 +61,7 @@
         "name": "Международный женский день"
       }
     ],
-    "fetched_at": "2026-11-26T14:06:09+05:00"
+    "fetched_at": "2026-11-27T00:22:13+05:00"
   },
-  "updated_at": "2026-11-26T14:06:09+05:00"
+  "updated_at": "2026-11-27T00:22:13+05:00"
 }
